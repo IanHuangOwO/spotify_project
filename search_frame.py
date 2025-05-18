@@ -11,6 +11,7 @@ from pandas import DataFrame
 import webbrowser
 from Recom_Song_API import get_song_API
 from dotenv import load_dotenv
+import yaml
 
 class SearchFrame(ctk.CTkFrame):
     def __init__(self, master, assets_path: Path, *args, **kwargs):
@@ -33,6 +34,7 @@ class SearchFrame(ctk.CTkFrame):
 
         # Load CSV in a separate thread
         threading.Thread(target=self.load_csv_data, daemon=True).start()
+        threading.Thread(target=self.load_yaml_data, daemon=True).start()
         
         self.setup_ui()
         self.bind("<Configure>", self.resize_background)
@@ -48,6 +50,16 @@ class SearchFrame(ctk.CTkFrame):
                 self.song_data = list(reader)
         except Exception as e:
             print(f"Error loading CSV: {e}")
+    
+    def load_yaml_data(self):
+        try:
+            yaml_path = self.assets_path / "config.yaml"
+            with open(yaml_path, "r") as file:
+                data = yaml.safe_load(file)
+                self.country_dict = data["countries"]
+                self.feature_columns = data["feature_columns"]
+        except Exception as e:
+            print(f"Error loading YMAL: {e}")
 
     def setup_ui(self):
         # Canvas
@@ -66,11 +78,20 @@ class SearchFrame(ctk.CTkFrame):
         self.title_label = ctk.CTkLabel(self.rounded_panel, 
                                         text="Discover\nNew\nSong", justify="center", font=("Inter", 40, "bold"), text_color="#A77B1D")
         self.title_label.place(relx=0.5, y=50, anchor="n")
-
+        
+        # Create the CTkOptionMenu
+        country_names = list(self.country_dict.keys())
+        
+        dropdown = ctk.CTkOptionMenu(self.rounded_panel, 
+                                     width=250, height=30, 
+                                     bg_color="#0F1920", fg_color="#353535", text_color = "#999999",
+                                     button_color= "#353535", button_hover_color = "#505050", corner_radius=35, values=country_names, command=self.on_selection,)
+        dropdown.place(relx=0.5, y=230, anchor="n")
+        
         # Search Entry
         self.search_entry = ctk.CTkEntry(self.rounded_panel, 
-                                         width=250, height=30, corner_radius=35, placeholder_text="Search your song")
-        self.search_entry.place(relx=0.5, y=250, anchor="n")
+                                         width=250, height=30, corner_radius=35, border_width = 0, placeholder_text="Search your song")
+        self.search_entry.place(relx=0.5, y=270, anchor="n")
         self.search_entry.bind("<KeyRelease>", self.on_entry_keyrelease)
         
         # Dropdown
@@ -86,17 +107,17 @@ class SearchFrame(ctk.CTkFrame):
 
         # Album image
         self.album_image_label = ctk.CTkLabel(self.rounded_panel, text="")
-        self.album_image_label.place(x=120, y=310)
+        self.album_image_label.place(x=120, y=330)
         self.update_album_image()
         
         # Song info labels
         self.song_title_label = ctk.CTkLabel(self.rounded_panel, 
                                              text="Big Yellow Chicken", font=("Inter", 16, "bold"), text_color="#E4E4E4")
-        self.song_title_label.place(x=120, y=460)
+        self.song_title_label.place(x=120, y=480)
 
         self.artist_label = ctk.CTkLabel(self.rounded_panel, 
                                          text="Yellow Chicken", font=("Inter", 10), text_color="#AAAAAA")
-        self.artist_label.place(x=120, y=480)
+        self.artist_label.place(x=120, y=500)
         
         # Listen Button
         youtube = Image.open(self.relative_to_assets("defaults/youtube_music.png")).resize((30, 30))
@@ -110,7 +131,7 @@ class SearchFrame(ctk.CTkFrame):
             fg_color="#0F1920",
             hover_color="#505050",
         )
-        self.youtube_button.place(x=150, y=520, anchor="n")
+        self.youtube_button.place(x=150, y=540, anchor="n")
         
         spotify = Image.open(self.relative_to_assets("defaults/spotify_music.png")).resize((30, 30))
         self.spotify_image = ImageTk.PhotoImage(spotify)
@@ -124,7 +145,7 @@ class SearchFrame(ctk.CTkFrame):
             hover_color="#505050",
             command=lambda: self.open_spotify_link(),
         )
-        self.spotify_button.place(x=190, y=520, anchor="n")
+        self.spotify_button.place(x=190, y=540, anchor="n")
         
         apple = Image.open(self.relative_to_assets("defaults/apple_music.png")).resize((30, 30))
         self.apple_image = ImageTk.PhotoImage(apple)
@@ -137,7 +158,7 @@ class SearchFrame(ctk.CTkFrame):
             fg_color="#0F1920",
             hover_color="#505050",
         )
-        self.apple_button.place(x=230, y=520, anchor="n")
+        self.apple_button.place(x=230, y=540, anchor="n")
         
         # Discover Button
         self.button = ctk.CTkButton(
@@ -152,7 +173,7 @@ class SearchFrame(ctk.CTkFrame):
             corner_radius=35,
             command=self.on_discover_click
         )
-        self.button.place(relx=0.5, y=580, anchor="n")
+        self.button.place(relx=0.5, y=600, anchor="n")
     
     def resize_background(self, event):
         new_width = event.width
@@ -162,17 +183,18 @@ class SearchFrame(ctk.CTkFrame):
         self.bg_image_tk = ImageTk.PhotoImage(resized)
         self.canvas.itemconfig(self.canvas_bg, image=self.bg_image_tk)
 
+    def on_selection(self, choice):
+        self.country_code = self.country_dict[choice]
+        print(f"Selected: {choice} → {self.country_code}")
+    
     def on_entry_keyrelease(self, event):
         if self.typing_timer:
             self.typing_timer.cancel()
 
         self.latest_query = self.search_entry.get()
         
-        if len(self.latest_query) > 10:
-            self.perform_search()
-        else:
-            self.typing_timer = threading.Timer(0.5, self.perform_search)
-            self.typing_timer.start()
+        self.typing_timer = threading.Timer(0.5, self.perform_search)
+        self.typing_timer.start()
 
     def perform_search(self):
         query = self.latest_query.lower()
@@ -239,13 +261,10 @@ class SearchFrame(ctk.CTkFrame):
         self.setup_recommanded_data()
         self.parent.show_discover_frame()
         
-    def setup_recommanded_data(self, feature_columns = [
-            "danceability", "energy", "key", "loudness", "mode", "speechiness",
-            "acousticness", "instrumentalness", "liveness", "valence", "tempo", "duration_ms"]):
-        
+    def setup_recommanded_data(self):
         if self.song_data is None:
             return
-        input_feature = DataFrame([{key: self.song_selected[key] for key in feature_columns}])
+        input_feature = DataFrame([{key: self.song_selected[key] for key in self.feature_columns}])
         input_language = self.song_selected["Language"]
         
         results = get_song_API(target_features= input_feature, target_language = input_language)

@@ -1,0 +1,87 @@
+feature_columns:
+  - danceability
+  - energy
+  - key
+  - loudness
+  - mode
+  - speechiness
+  - acousticness
+  - instrumentalness
+  - liveness
+  - valence
+  - tempo
+  - duration_ms
+
+countries:
+  United Arab Emirates: AE
+  Argentina: AR
+  Austria: AT
+  Australia: AU
+  Belgium: BE
+  Bulgaria: BG
+  Bolivia: BO
+  Brazil: BR
+  Belarus: BY
+  Canada: CA
+  Switzerland: CH
+  Chile: CL
+  Colombia: CO
+  Costa Rica: CR
+  Czech Republic: CZ
+  Germany: DE
+  Denmark: DK
+  Dominican Republic: DO
+  Ecuador: EC
+  Estonia: EE
+  Egypt: EG
+  Spain: ES
+  Finland: FI
+  France: FR
+  United Kingdom: GB
+  Greece: GR
+  Guatemala: GT
+  Hong Kong: HK
+  Honduras: HN
+  Hungary: HU
+  Indonesia: ID
+  Ireland: IE
+  Israel: IL
+  India: IN
+  Iceland: IS
+  Italy: IT
+  Japan: JP
+  South Korea: KR
+  Kazakhstan: KZ
+  Lithuania: LT
+  Luxembourg: LU
+  Latvia: LV
+  Morocco: MA
+  Mexico: MX
+  Malaysia: MY
+  Nigeria: NG
+  Nicaragua: NI
+  Netherlands: NL
+  Norway: NO
+  New Zealand: NZ
+  Panama: PA
+  Peru: PE
+  Philippines: PH
+  Pakistan: PK
+  Poland: PL
+  Portugal: PT
+  Paraguay: PY
+  Romania: RO
+  Saudi Arabia: SA
+  Sweden: SE
+  Singapore: SG
+  Slovakia: SK
+  El Salvador: SV
+  Thailand: TH
+  Turkey: TR
+  Taiwan: TW
+  Ukraine: UA
+  United States: US
+  Uruguay: UY
+  Venezuela: VE
+  Vietnam: VN
+  South Africa: ZA
