@@ -3,3 +3,5 @@
 /assets/data/fliter_data_test.csv
 /assets/data/fliter_data_train.csv
 /assets/data/universe_avg_data.csv
+/assets/data/clustered_gmm_result.csv
+/assets/data/filter_data.csv

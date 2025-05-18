@@ -7,7 +7,6 @@ import threading
 import os
 from PIL import Image, ImageTk
 from spotify_api import SpotifyAPI
-from pandas import DataFrame
 import webbrowser
 from Recom_Song_API import get_song_API
 from dotenv import load_dotenv
@@ -44,10 +43,16 @@ class SearchFrame(ctk.CTkFrame):
 
     def load_csv_data(self):
         try:
-            csv_path = self.assets_path / "data/en_data.csv"
-            with open(csv_path, newline='', encoding='utf-8') as f:
+            filter_data_path = self.assets_path / "data/filter_data.csv"
+            with open(filter_data_path, newline='', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 self.song_data = list(reader)
+            
+            universe_avg_path = self.assets_path / "data/universe_avg_data.csv"
+            with open(universe_avg_path, newline='', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                self.universe_avg_data = list(reader)
+                
         except Exception as e:
             print(f"Error loading CSV: {e}")
     
@@ -56,7 +61,8 @@ class SearchFrame(ctk.CTkFrame):
             yaml_path = self.assets_path / "config.yaml"
             with open(yaml_path, "r") as file:
                 data = yaml.safe_load(file)
-                self.country_dict = data["countries"]
+                self.country_tags = data["countries"]
+                self.country_language = data['languages']
                 self.feature_columns = data["feature_columns"]
         except Exception as e:
             print(f"Error loading YMAL: {e}")
@@ -80,18 +86,21 @@ class SearchFrame(ctk.CTkFrame):
         self.title_label.place(relx=0.5, y=50, anchor="n")
         
         # Create the CTkOptionMenu
-        country_names = list(self.country_dict.keys())
+        country_names = list(self.country_tags.keys())
         
-        dropdown = ctk.CTkOptionMenu(self.rounded_panel, 
+        self.option = ctk.CTkOptionMenu(self.rounded_panel, 
                                      width=250, height=30, 
-                                     bg_color="#0F1920", fg_color="#353535", text_color = "#999999",
-                                     button_color= "#353535", button_hover_color = "#505050", corner_radius=35, values=country_names, command=self.on_selection,)
-        dropdown.place(relx=0.5, y=230, anchor="n")
+                                     bg_color="#0F1920", fg_color="#353535", text_color = "#999999", button_color= "#353535", button_hover_color = "#505050", corner_radius=35, values=country_names)
+        self.option.place(relx=0.5, y=230, anchor="n")
+        
+        self.checkbox = ctk.CTkCheckBox(master=self.rounded_panel,
+                                        checkbox_width=15, checkbox_height=15, text="Only local language song?", font=("Inter", 14), border_width= 1)
+        self.checkbox.place(relx=0.5, y=263, anchor="n")
         
         # Search Entry
         self.search_entry = ctk.CTkEntry(self.rounded_panel, 
                                          width=250, height=30, corner_radius=35, border_width = 0, placeholder_text="Search your song")
-        self.search_entry.place(relx=0.5, y=270, anchor="n")
+        self.search_entry.place(relx=0.5, y=290, anchor="n")
         self.search_entry.bind("<KeyRelease>", self.on_entry_keyrelease)
         
         # Dropdown
@@ -182,10 +191,6 @@ class SearchFrame(ctk.CTkFrame):
         resized = self.original_bg_image.resize((new_width, new_height), Image.LANCZOS)
         self.bg_image_tk = ImageTk.PhotoImage(resized)
         self.canvas.itemconfig(self.canvas_bg, image=self.bg_image_tk)
-
-    def on_selection(self, choice):
-        self.country_code = self.country_dict[choice]
-        print(f"Selected: {choice} → {self.country_code}")
     
     def on_entry_keyrelease(self, event):
         if self.typing_timer:
@@ -226,8 +231,6 @@ class SearchFrame(ctk.CTkFrame):
         if not self.song_selected:
             return
         
-        # print(self.song_selected)
-        
         self.search_entry.delete(0, tk.END)
         self.search_entry.insert(0, self.song_selected["name"])
         self.dropdown.withdraw()
@@ -262,18 +265,37 @@ class SearchFrame(ctk.CTkFrame):
         self.parent.show_discover_frame()
         
     def setup_recommanded_data(self):
+        import numpy as np
+        from pandas import DataFrame
+        
         if self.song_data is None:
             return
-        input_feature = DataFrame([{key: self.song_selected[key] for key in self.feature_columns}])
-        input_language = self.song_selected["Language"]
         
-        results = get_song_API(target_features= input_feature, target_language = input_language)
+        current_country_tag = self.country_tags[self.option.get()]
+        country_selected = next((item for item in self.universe_avg_data if item['country'] == current_country_tag), None)
+        
+        input_feature = np.array([float(self.song_selected[key]) for key in self.feature_columns])
+        country_feature = np.array([float(country_selected[key]) for key in self.feature_columns])
+
+        features = 0.8 * input_feature + 0.2 * country_feature
+        
+        current_language = self.country_language.get(self.option.get(), None) if self.checkbox.get() else None
+        
+        print(current_language)
+        
+        results = get_song_API(features_df= DataFrame([features], columns=self.feature_columns), language = current_language)
+        
         self.parent.discover_frame.original_id = self.song_selected["id"]
         self.parent.discover_frame.update_song_info(self.song_selected["id"])
         
-        self.parent.discover_frame.first_id = results[0][0]
-        self.parent.discover_frame.second_id = results[1][0]
-        self.parent.discover_frame.third_id = results[2][0]
-        self.parent.discover_frame.opposite_id = results[3][0]
+        id_fields = ["first_id", "second_id", "third_id", "opposite_id"]
+        
+        for i, attr in enumerate(id_fields):
+            if len(results) > i:
+                value = results[i][0] if (i != 0 or results[i][1] > 0.8) else None
+                setattr(self.parent.discover_frame, attr, value)
+            else:
+                setattr(self.parent.discover_frame, attr, None)
+
         
         
