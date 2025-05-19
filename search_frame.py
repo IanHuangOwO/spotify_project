@@ -277,7 +277,7 @@ class SearchFrame(ctk.CTkFrame):
         input_feature = np.array([float(self.song_selected[key]) for key in self.feature_columns])
         country_feature = np.array([float(country_selected[key]) for key in self.feature_columns])
 
-        features = 0.8 * input_feature + 0.2 * country_feature
+        features = 0.8 * input_feature + 0.1 * country_feature
         
         current_language = self.country_language.get(self.option.get(), None) if self.checkbox.get() else None
         
@@ -287,11 +287,23 @@ class SearchFrame(ctk.CTkFrame):
         self.parent.discover_frame.update_song_info(self.song_selected["id"])
         
         id_fields = ["first_id", "second_id", "third_id", "opposite_id"]
+        temp_id = []
+        
+        for id, score in results:
+            if score < 0.8:
+                continue
+            info = self.spotify.get_track_info(id)
+            if info["popularity"] < 50:
+                continue
+            
+            if len(temp_id) > 4:
+                break
+            
+            temp_id.append(id)        
         
         for i, attr in enumerate(id_fields):
-            if len(results) > i:
-                value = results[i][0] if (i != 0 or results[i][1] > 0.8) else None
-                setattr(self.parent.discover_frame, attr, value)
+            if len(temp_id) > i:
+                setattr(self.parent.discover_frame, attr, temp_id[i])
             else:
                 setattr(self.parent.discover_frame, attr, None)
 

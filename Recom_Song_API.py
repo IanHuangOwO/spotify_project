@@ -52,7 +52,7 @@ def get_song_API(id,features_df, language: str = "none"):
         clustered_csv="./assets/data/clustered_gmm_result.csv",
         test_pca_vector=test_pca_vector,
         language=language,
-        top_n=10
+        top_n=100
     )
     
     return positiveResult

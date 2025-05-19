@@ -21,13 +21,13 @@ class SpotifyAPI:
         
         if len(data["name"]) > max_length:
             data["name"] = data["name"][:max_length - 3] + "..."
-        
-        # print(data)
+
         return {
             "name": data["name"],
             "artists": data["artists"][0]["name"],
             "image_url": data["album"]["images"][0]["url"],
-            "spotify_url": data["external_urls"]["spotify"]
+            "spotify_url": data["external_urls"]["spotify"],
+            "popularity": data["popularity"],
         }
 
     def get_album_image(self, url):
