@@ -39,4 +39,4 @@ def find_similar_songs(clustered_csv, test_pca_vector, language, top_n=5):
     top_song_ids = df.iloc[filtered_idx[top_indices], 0].values
     top_scores = similarities[top_indices]
 
-    return list(zip(top_song_ids, top_scores))
+    return list(zip(top_song_ids, top_scores))[1:]

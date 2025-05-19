@@ -195,7 +195,7 @@ class SearchFrame(ctk.CTkFrame):
     def on_entry_keyrelease(self, event):
         if self.typing_timer:
             self.typing_timer.cancel()
-
+            
         self.latest_query = self.search_entry.get()
         
         self.typing_timer = threading.Timer(0.5, self.perform_search)
