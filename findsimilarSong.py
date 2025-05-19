@@ -3,7 +3,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import pickle
 
-def find_similar_songs(clustered_csv, test_pca_vector, language, top_n=5):
+def find_similar_songs(id, clustered_csv, test_pca_vector, language, top_n=5):
     """
     根據 test 向量找出同 cluster 且同語言中最相似的歌曲。
     """
@@ -26,6 +26,9 @@ def find_similar_songs(clustered_csv, test_pca_vector, language, top_n=5):
         # 如果有指定語言，則篩選語言
         filtered_df = df[(df["Cluster"] == target_cluster) & (df["Language"] == language)]
 
+    # 排除與輸入 id 相同的歌曲
+    filtered_df = filtered_df[filtered_df.iloc[:, 0] != id]
+    
     if filtered_df.empty:
         print(f"⚠️ No songs found in cluster {target_cluster} with language '{language}'")
         return []
@@ -39,4 +42,4 @@ def find_similar_songs(clustered_csv, test_pca_vector, language, top_n=5):
     top_song_ids = df.iloc[filtered_idx[top_indices], 0].values
     top_scores = similarities[top_indices]
 
-    return list(zip(top_song_ids, top_scores))[1:]
+    return list(zip(top_song_ids, top_scores))

@@ -281,7 +281,7 @@ class SearchFrame(ctk.CTkFrame):
         
         current_language = self.country_language.get(self.option.get(), None) if self.checkbox.get() else None
         
-        results = get_song_API(features_df= DataFrame([features], columns=self.feature_columns), language = current_language)
+        results = get_song_API(id = self.song_selected["id"],features_df= DataFrame([features], columns=self.feature_columns), language = current_language)
         
         self.parent.discover_frame.original_id = self.song_selected["id"]
         self.parent.discover_frame.update_song_info(self.song_selected["id"])

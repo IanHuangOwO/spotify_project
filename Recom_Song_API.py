@@ -1,7 +1,7 @@
 import pickle
 import findsimilarSong
 
-def get_song_API(features_df, language: str = "none"):
+def get_song_API(id,features_df, language: str = "none"):
     """
     根據歌曲 ID 取得該首歌的特徵向量
     :param song_id: 歌曲 ID
@@ -48,6 +48,7 @@ def get_song_API(features_df, language: str = "none"):
     # 找相似歌曲（在同 cluster 裡）
     print("正在尋找相似歌曲...")
     positiveResult = findsimilarSong.find_similar_songs(
+        id = id,
         clustered_csv="./assets/data/clustered_gmm_result.csv",
         test_pca_vector=test_pca_vector,
         language=language,
