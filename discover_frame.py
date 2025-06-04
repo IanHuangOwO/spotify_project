@@ -1,10 +1,10 @@
+import os
 from pathlib import Path
 import customtkinter as ctk
 from customtkinter import CTkImage
 from PIL import Image, ImageTk
 from spotify_api import SpotifyAPI
 import webbrowser
-import os
 from dotenv import load_dotenv
 
 class DiscoverFrame(ctk.CTkFrame):

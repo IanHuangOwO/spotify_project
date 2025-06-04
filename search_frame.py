@@ -1,16 +1,17 @@
-from pathlib import Path
 import customtkinter as ctk
 from customtkinter import CTkImage
 import tkinter as tk
-import csv
+
 import threading
 import os
+import numpy as np
+from pathlib import Path
 from PIL import Image, ImageTk
-from spotify_api import SpotifyAPI
-import webbrowser
-from Recom_Song_API import get_song_API
 from dotenv import load_dotenv
-import yaml
+
+from song_recommender import SongRecommender
+from spotify_api import SpotifyAPI
+
 
 class SearchFrame(ctk.CTkFrame):
     def __init__(self, master, assets_path: Path, *args, **kwargs):
@@ -42,6 +43,8 @@ class SearchFrame(ctk.CTkFrame):
         return self.assets_path / Path(path)
 
     def load_csv_data(self):
+        import csv
+        
         try:
             filter_data_path = self.assets_path / "data/filter_data.csv"
             with open(filter_data_path, newline='', encoding='utf-8') as f:
@@ -57,6 +60,8 @@ class SearchFrame(ctk.CTkFrame):
             print(f"Error loading CSV: {e}")
     
     def load_yaml_data(self):
+        import yaml
+        
         try:
             yaml_path = self.assets_path / "config.yaml"
             with open(yaml_path, "r") as file:
@@ -255,6 +260,8 @@ class SearchFrame(ctk.CTkFrame):
         self.album_image_label.configure(image=self.album_image)
 
     def open_spotify_link(self):
+        import webbrowser
+        
         if hasattr(self, 'current_spotify_url'):
             webbrowser.open(self.current_spotify_url)
         else:
@@ -265,10 +272,7 @@ class SearchFrame(ctk.CTkFrame):
         self.parent.show_discover_frame()
         
     def setup_recommanded_data(self):
-        import numpy as np
-        from pandas import DataFrame
-        
-        if self.song_data is None:
+        if self.song_selected is None:
             return
         
         current_country_tag = self.country_tags[self.option.get()]
@@ -277,11 +281,17 @@ class SearchFrame(ctk.CTkFrame):
         input_feature = np.array([float(self.song_selected[key]) for key in self.feature_columns])
         country_feature = np.array([float(country_selected[key]) for key in self.feature_columns])
 
-        features = 0.8 * input_feature + 0.2 * country_feature
+        features = np.array(0.8 * input_feature + 0.2 * country_feature)
         
         current_language = self.country_language.get(self.option.get(), None) if self.checkbox.get() else None
         
-        results = get_song_API(id = self.song_selected["id"],features_df= DataFrame([features], columns=self.feature_columns), language = current_language)
+        recommander = SongRecommender()
+        
+        results = recommander.get_similar_songs(
+            song_id = self.song_selected["id"],
+            features= features[np.newaxis, :],
+            language = current_language,
+        )
         
         self.parent.discover_frame.original_id = self.song_selected["id"]
         self.parent.discover_frame.update_song_info(self.song_selected["id"])
@@ -294,6 +304,3 @@ class SearchFrame(ctk.CTkFrame):
                 setattr(self.parent.discover_frame, attr, value)
             else:
                 setattr(self.parent.discover_frame, attr, None)
-
-        
-        
