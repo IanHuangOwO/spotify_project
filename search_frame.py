@@ -297,10 +297,22 @@ class SearchFrame(ctk.CTkFrame):
         self.parent.discover_frame.update_song_info(self.song_selected["id"])
         
         id_fields = ["first_id", "second_id", "third_id", "opposite_id"]
+        temp_id = []
+        
+        for id, score in results:
+            if score < 0.8:
+                continue
+            info = self.spotify.get_track_info(id)
+            if info["popularity"] < 50:
+                continue
+            
+            if len(temp_id) > 4:
+                break
+            
+            temp_id.append(id)        
         
         for i, attr in enumerate(id_fields):
-            if len(results) > i:
-                value = results[i][0] if (i != 0 or results[i][1] > 0.8) else None
-                setattr(self.parent.discover_frame, attr, value)
+            if len(temp_id) > i:
+                setattr(self.parent.discover_frame, attr, temp_id[i])
             else:
                 setattr(self.parent.discover_frame, attr, None)

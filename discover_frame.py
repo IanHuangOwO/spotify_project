@@ -99,7 +99,7 @@ class DiscoverFrame(ctk.CTkFrame):
         
         self.opposite_button = ctk.CTkButton(
             self,
-            text="Opposite Song",
+            text="Fourth Song",
             font=("Courier New", 20),
             width=40,
             height=20,
