@@ -291,6 +291,7 @@ class SearchFrame(ctk.CTkFrame):
             song_id = self.song_selected["id"],
             features= features[np.newaxis, :],
             language = current_language,
+            top_n= 200,
         )
         
         self.parent.discover_frame.original_id = self.song_selected["id"]
@@ -298,12 +299,11 @@ class SearchFrame(ctk.CTkFrame):
         
         id_fields = ["first_id", "second_id", "third_id", "opposite_id"]
         temp_id = []
-        
         for id, score in results:
             if score < 0.8:
                 continue
             info = self.spotify.get_track_info(id)
-            if info["popularity"] < 50:
+            if info["popularity"] < 40:
                 continue
             
             if len(temp_id) > 4:
